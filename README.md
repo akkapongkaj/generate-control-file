@@ -1,15 +1,64 @@
 # generate-control-file
 
-The program that allow user input the filename then the system will generate the control file output
+A small command-line utility that creates a ``.CTL`` control file for a given
+text data file. The generated file follows the five-column, pipe-delimited
+layout:
 
-name same as the input but add .CTL in suffix
+1. Processing/System date (``YYYYMMDD``)
+2. Data date (``YYYYMMDD``)
+3. Total number of data records
+4. Data file name (with extension)
+5. Checksum of the data file
 
-spec check in image
-input 
-- filename: 20240125
-- date: NCB_HPCHGREPOS.txt
+The checksum defaults to the MD5 algorithm to match the reference example, but
+SHA-512 is also supported.
 
-data in control file will be like this
+## Installation
+
+The script is self-contained and only requires Python 3.9 or newer. Clone or
+copy this repository and run the script directly with Python:
+
+```bash
+python3 generate_control_file.py --help
+```
+
+## Usage
+
+```bash
+python3 generate_control_file.py \
+  --processing-date 20240125 \
+  --data-date 20240125 \
+  --checksum-algorithm md5 \
+  --skip-header 0 \
+  --skip-footer 0 \
+  path/to/NCB_HPCHGREPOS.txt
+```
+
+The command above will create ``NCB_HPCHGREPOS.txt.CTL`` in the same directory
+as the source file. The ``--data-date`` option defaults to the processing date,
+and the header/footer arguments allow you to exclude leading or trailing lines
+(such as report headers) from the record count.
+
+### Example
+
+Assuming ``NCB_HPCHGREPOS.txt`` contains three data rows without headers:
+
+```text
+record-1
+record-2
+record-3
+```
+
+Running:
+
+```bash
+python3 generate_control_file.py --processing-date 20240125 NCB_HPCHGREPOS.txt
+```
+
+Produces ``NCB_HPCHGREPOS.txt.CTL`` with the following content:
+
+```
 20240125|20240125|3|NCB_HPCHGREPOS.txt|9c224837cb6023fdabb7e7b84052f49d
+```
 
-control filename: NCB_HPCHGREPOS.txt.CTL
+The checksum in the example is the MD5 digest of ``NCB_HPCHGREPOS.txt``.
