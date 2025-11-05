@@ -11,7 +11,7 @@ The resulting control file follows the five-field pipe-delimited structure:
 5. Checksum of the data file
 
 The checksum algorithm defaults to MD5 to match legacy specifications, but
-SHA-512 can also be used with the ``--checksum-algorithm`` flag.
+SHA-256 and SHA-512 can also be used with the ``--checksum-algorithm`` flag.
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from typing import Iterable
 
 SUPPORTED_ALGORITHMS = {
     "md5": hashlib.md5,
+    "sha256": hashlib.sha256,
     "sha512": hashlib.sha512,
 }
 
@@ -112,12 +113,28 @@ def write_control_file(target: Path, record: str) -> None:
         handle.write(record + "\n")
 
 
+def _ensure_data_file(path: Path, create_empty: bool = False) -> Path:
+    """Return ``path`` ensuring it exists, optionally creating an empty file."""
+
+    if path.is_file():
+        return path
+
+    if not create_empty:
+        raise FileNotFoundError(f"Data file '{path}' does not exist.")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch(exist_ok=True)
+    return path
+
+
 def generate_control_file(args: argparse.Namespace) -> Path:
     """Create the control file based on parsed CLI arguments."""
 
     data_path = Path(args.data_file).expanduser().resolve()
-    if not data_path.is_file():
-        raise FileNotFoundError(f"Data file '{data_path}' does not exist.")
+    data_path = _ensure_data_file(
+        data_path,
+        create_empty=args.create_empty_data_file,
+    )
 
     processing_date = parse_date(args.processing_date)
     data_date = parse_date(args.data_date or processing_date)
@@ -149,6 +166,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "data_file",
         help="Path to the source data file (e.g. NCB_HPCHGREPOS.txt)",
+    )
+    parser.add_argument(
+        "--create-empty-data-file",
+        action="store_true",
+        help=(
+            "Create an empty data file if the specified path does not exist "
+            "before generating the control file"
+        ),
     )
     parser.add_argument(
         "--processing-date",

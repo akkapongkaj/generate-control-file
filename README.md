@@ -11,7 +11,7 @@ layout:
 5. Checksum of the data file
 
 The checksum defaults to the MD5 algorithm to match the reference example, but
-SHA-512 is also supported.
+SHA-256 and SHA-512 are also supported.
 
 ## Installation
 
@@ -29,6 +29,7 @@ python3 generate_control_file.py \
   --processing-date 20240125 \
   --data-date 20240125 \
   --checksum-algorithm md5 \
+  --create-empty-data-file \
   --skip-header 0 \
   --skip-footer 0 \
   path/to/NCB_HPCHGREPOS.txt
@@ -37,7 +38,10 @@ python3 generate_control_file.py \
 The command above will create ``NCB_HPCHGREPOS.txt.CTL`` in the same directory
 as the source file. The ``--data-date`` option defaults to the processing date,
 and the header/footer arguments allow you to exclude leading or trailing lines
-(such as report headers) from the record count.
+(such as report headers) from the record count. If the ``--create-empty-data-file``
+flag is provided and the source file does not exist, the script will create an
+empty placeholder file before generating the control file, resulting in a record
+count of zero and the checksum of an empty file.
 
 ### Example
 
